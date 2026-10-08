@@ -89,11 +89,55 @@ resources/views/
    - Classifies categories and formats titles (e.g. `Topik: #Politik - Pilkada Serentak`).
    - Updates the top 5 trending topics in `trending_topics` with `last_successful_update`.
 
+## 🚀 Quickstart & Database Setup (For Cloners)
+
+Jika Anda menyalin / meng-clone repositori ini dari GitHub:
+
+### 1. Clone & Install Dependencies
+```bash
+git clone https://github.com/rayhanbilal09-dev/NewsScraper.git
+cd NewsScraper
+composer install
+cp .env.example .env
+php artisan key:generate
+```
+
+### 2. Setup Database (Pilih salah satu cara berikut)
+
+- **Cara A (SQLite Praktis - Rekomendasi):**
+  Cukup salin database SQLite bawaan yang sudah terisi data:
+  ```bash
+  # Windows PowerShell
+  Copy-Item database/database.sqlite.example database/database.sqlite
+  # Atau Linux / Mac:
+  cp database/database.sqlite.example database/database.sqlite
+  ```
+
+- **Cara B (Migrate & Seed Otomatis):**
+  ```bash
+  php artisan migrate --seed
+  ```
+
+- **Cara C (MySQL / MariaDB via SQL Dump):**
+  Impor file SQL dump yang sudah disediakan [`database/newsscraper.sql`](database/newsscraper.sql) langsung ke phpMyAdmin atau MySQL terminal:
+  ```bash
+  mysql -u root -p database_name < database/newsscraper.sql
+  ```
+  Lalu sesuaikan konfigurasi `.env`:
+  ```ini
+  DB_CONNECTION=mysql
+  DB_HOST=127.0.0.1
+  DB_PORT=3306
+  DB_DATABASE=database_name
+  DB_USERNAME=root
+  DB_PASSWORD=
+  ```
+
 ---
 
-## 🚀 Running the Application
+## 🛠 Menjalankan Aplikasi
 
-### 1. Execute Manual Scraping via Console
+### 1. Eksekusi Scraper Manual via Console
 ```bash
 php artisan app:run-news-scraper
 ```
