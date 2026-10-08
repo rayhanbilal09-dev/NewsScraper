@@ -104,33 +104,28 @@ php artisan key:generate
 
 ### 2. Setup Database (Pilih salah satu cara berikut)
 
-- **Cara A (SQLite Praktis - Rekomendasi):**
-  Cukup salin database SQLite bawaan yang sudah terisi data:
-  ```bash
-  # Windows PowerShell
-  Copy-Item database/database.sqlite.example database/database.sqlite
-  # Atau Linux / Mac:
-  cp database/database.sqlite.example database/database.sqlite
-  ```
+- **Cara A (SQLite - Langsung Pakai Tanpa Setup):**
+  File database `database/database.sqlite` **sudah disertakan langsung di dalam repositori** beserta data topik & log scraping awal. Anda tidak perlu setup apa pun, langsung jalankan `php artisan serve`!
 
-- **Cara B (Migrate & Seed Otomatis):**
+- **Cara B (MySQL / MariaDB / phpMyAdmin via SQL Dump):**
+  Tersedia file SQL dump [`database.sql`](database.sql) di root folder (dan di `database/database.sql`).
+  Tinggal impor file `database.sql` langsung melalui **phpMyAdmin** (Database `newsscraper` akan otomatis dibuat), atau lewat terminal:
   ```bash
-  php artisan migrate --seed
+  mysql -u root -p < database.sql
   ```
-
-- **Cara C (MySQL / MariaDB via SQL Dump):**
-  Impor file SQL dump yang sudah disediakan [`database/newsscraper.sql`](database/newsscraper.sql) langsung ke phpMyAdmin atau MySQL terminal:
-  ```bash
-  mysql -u root -p database_name < database/newsscraper.sql
-  ```
-  Lalu sesuaikan konfigurasi `.env`:
+  Lalu sesuaikan `.env`:
   ```ini
   DB_CONNECTION=mysql
   DB_HOST=127.0.0.1
   DB_PORT=3306
-  DB_DATABASE=database_name
+  DB_DATABASE=newsscraper
   DB_USERNAME=root
   DB_PASSWORD=
+  ```
+
+- **Cara C (Fresh Migrate & Seed Otomatis):**
+  ```bash
+  php artisan migrate:fresh --seed
   ```
 
 ---
