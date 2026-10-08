@@ -201,8 +201,6 @@ class NewsScraperService
                 'start_time' => $startTime,
                 'end_time' => $endTime,
                 'error_message' => null,
-                'duration_seconds' => $duration,
-                'records_count' => $recordsCount,
             ]);
 
             return [
@@ -229,8 +227,6 @@ class NewsScraperService
                 'start_time' => $startTime,
                 'end_time' => $endTime,
                 'error_message' => $errorMessage,
-                'duration_seconds' => $duration,
-                'records_count' => 0,
             ]);
 
             return [

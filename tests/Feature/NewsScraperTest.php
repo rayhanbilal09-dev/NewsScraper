@@ -39,8 +39,6 @@ class NewsScraperTest extends TestCase
             'status' => 'success',
             'start_time' => Carbon::now()->subSeconds(2),
             'end_time' => Carbon::now(),
-            'duration_seconds' => 1.8,
-            'records_count' => 45,
         ]);
 
         ScrapingLog::create([
@@ -50,8 +48,6 @@ class NewsScraperTest extends TestCase
             'start_time' => Carbon::now()->subSeconds(1),
             'end_time' => Carbon::now(),
             'error_message' => 'Connection refused',
-            'duration_seconds' => 0.5,
-            'records_count' => 0,
         ]);
 
         $response = $this->get('/scraping-logs');
@@ -99,8 +95,6 @@ class NewsScraperTest extends TestCase
             'status' => 'success',
             'start_time' => Carbon::now()->subSeconds(2),
             'end_time' => Carbon::now(),
-            'duration_seconds' => 2.0,
-            'records_count' => 50,
         ]);
 
         $response = $this->getJson('/api/scraping-logs');

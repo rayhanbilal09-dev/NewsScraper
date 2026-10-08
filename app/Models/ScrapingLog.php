@@ -18,6 +18,7 @@ class ScrapingLog extends Model
 
     /**
      * The attributes that are mass assignable.
+     * Schema strictly contains: source_name, url, status, start_time, end_time, error_message
      *
      * @var array<int, string>
      */
@@ -28,8 +29,6 @@ class ScrapingLog extends Model
         'start_time',
         'end_time',
         'error_message',
-        'duration_seconds',
-        'records_count',
     ];
 
     /**
@@ -40,24 +39,28 @@ class ScrapingLog extends Model
     protected $casts = [
         'start_time' => 'datetime',
         'end_time' => 'datetime',
-        'duration_seconds' => 'float',
-        'records_count' => 'integer',
     ];
+
+    /**
+     * Computed duration in seconds between start_time and end_time.
+     */
+    public function getDurationSecondsAttribute(): float
+    {
+        if ($this->start_time && $this->end_time) {
+            return (float) round(abs($this->end_time->diffInMilliseconds($this->start_time) / 1000), 2);
+        }
+
+        return 0.0;
+    }
 
     /**
      * Human-friendly formatted duration.
      */
     public function getDurationFormattedAttribute(): string
     {
-        if ($this->duration_seconds !== null && $this->duration_seconds > 0) {
-            return $this->duration_seconds < 1
-                ? number_format($this->duration_seconds, 2) . 's'
-                : round($this->duration_seconds, 1) . 's';
-        }
-
         if ($this->start_time && $this->end_time) {
-            $diff = $this->end_time->diffInSeconds($this->start_time);
-            return $diff . 's';
+            $diff = abs($this->end_time->diffInMilliseconds($this->start_time) / 1000);
+            return round($diff, 2) . 's';
         }
 
         return '0s';

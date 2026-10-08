@@ -17,7 +17,6 @@ return new class extends Migration
             $table->string('category')->nullable();
             $table->double('score_or_count')->default(0);
             $table->timestamp('last_successful_update')->nullable();
-            $table->timestamps();
         });
     }
 

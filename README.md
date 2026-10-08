@@ -10,7 +10,7 @@ A production-ready Laravel application built with **PHP 8.2+**, **Laravel 12**, 
 2. **Indonesian NLP & Stemming**: [`sastrawi/sastrawi`](https://github.com/sastrawi/sastrawi) (`^1.2`)
 3. **Keyword Ranking & Extraction**: [`php-science/textrank`](https://github.com/DavidBelicza/PHP-Science-TextRank) (`^1.2`)
 4. **HTTP Client & HTML Parser**: [`guzzlehttp/guzzle`](https://github.com/guzzle/guzzle) & [`symfony/dom-crawler`](https://symfony.com/doc/current/components/dom_crawler.html)
-5. **Frontend**: Blade Templating + Tailwind CSS via CDN
+5. **Frontend**: Blade Templating + Tailwind CSS (via CDN) + Alpine.js (via CDN)
 
 ---
 
@@ -32,86 +32,84 @@ app/
     └── NewsScraperService.php           # Scraping, Sastrawi NLP & TextRank pipeline
 
 database/
-└── migrations/
-    ├── 2026_10_08_061655_create_scraping_logs_table.php
-    └── 2026_10_08_061656_create_trending_topics_table.php
+├── migrations/
+│   ├── 2026_10_08_061655_create_scraping_logs_table.php
+│   └── 2026_10_08_061656_create_trending_topics_table.php
+├── seeders/
+│   └── DatabaseSeeder.php               # Comprehensive dummy data seeder
+└── newsscraper.sql                      # Ready-to-import SQL database dump
 
 resources/views/
 ├── layouts/
-│   └── app.blade.php                    # Master layout with Tailwind CDN & navbar
+│   └── app.blade.php                    # Master layout with collapsible sidebar & modal
 └── pages/
-    ├── trending-topics.blade.php        # Page 1: Responsive 4-col card grid
-    └── scraper-monitor.blade.php        # Page 2: 4 metrics + logs table & modal
+    ├── trending-topics.blade.php        # Responsive 5-col cards with NLP pipeline steps
+    └── scraper-monitor.blade.php        # 4 Telemetry metric cards + logs table & modal
 ```
 
 ---
 
-## 📊 Database Schema
+## 📊 Database Schema (Strict Schema Specification)
 
 ### 1. `scraping_logs` Table
 - `id` (Primary Key, unsignedBigInteger)
-- `source_name` (string: Kompas, Tempo, Antara, CNN Indonesia)
+- `source_name` (string: Kompas, Tempo, Antara, CNN Indonesia, etc.)
 - `url` (text: Target URL / RSS Feed)
-- `status` (enum: 'success', 'failed')
-- `start_time` (timestamp)
-- `end_time` (timestamp)
+- `status` (enum: `'success'`, `'failed'`)
+- `start_time` (timestamp, nullable)
+- `end_time` (timestamp, nullable)
 - `error_message` (text, nullable: Captured exception trace or HTTP failure)
-- `duration_seconds` (decimal 8,2: Elapsed execution duration in seconds)
-- `records_count` (unsignedInteger: Extracted items/articles count)
 - `timestamps()` (`created_at`, `updated_at`)
 
 ### 2. `trending_topics` Table
 - `id` (Primary Key, unsignedBigInteger)
 - `topic_name` (string: Format "Topik: #Category - Topic Name")
-- `category` (string, nullable: #Politik, #Tekno, #Ekonomi, #Pendidikan, etc.)
-- `score_or_count` (double: Aggregated TextRank score)
-- `last_successful_update` (timestamp)
-- `timestamps()` (`created_at`, `updated_at`)
+- `category` (string, nullable: `#Politik`, `#Tekno`, `#Ekonomi`, `#Pendidikan`, `#Kesehatan`)
+- `score_or_count` (double: Aggregated TextRank salience score)
+- `last_successful_update` (timestamp, nullable)
 
 ---
 
-## 🧠 Scraping & NLP Pipeline (`NewsScraperService`)
+## 🚀 Panduan Setup Database untuk yang Meng-clone dari GitHub
 
-1. **HTTP Extraction**:
-   - Guzzle HTTP client with customized User-Agent and timeouts.
-   - Graceful try-catch error handling: Failed requests are captured and logged to `scraping_logs` with status `'failed'`, timestamps, and error messages.
-2. **HTML / XML Parsing**:
-   - `Symfony\Component\DomCrawler\Crawler` handles both RSS/Atom XML feeds and direct HTML web pages.
-   - Extracts titles, body content, and metadata cleanly while stripping HTML noise.
-3. **Indonesian Text Preprocessing (`Sastrawi`)**:
-   - **Stopword Removal**: Removes Indonesian stop words (e.g., `yang`, `di`, `dari`, `untuk`, `adalah`) using `Sastrawi\StopWordRemover\StopWordRemoverFactory`.
-   - **Stemming**: Converts words to root lemmas using `Sastrawi\Stemmer\StemmerFactory` (Nazief-Adriani algorithm).
-4. **Keyword Ranking (`PHP-Science-TextRank`)**:
-   - Ingests stemmed content into `PhpScience\TextRank\TextRankFacade::getOnlyKeyWords()`.
-   - Computes graph-based co-occurrence matrix and PageRank salience scores.
-5. **Topic Aggregation & Storage**:
-   - Aggregates scores across feeds.
-   - Classifies categories and formats titles (e.g. `Topik: #Politik - Pilkada Serentak`).
-   - Updates the top 5 trending topics in `trending_topics` with `last_successful_update`.
+Bagi yang menyalin atau meng-clone repository ini, ikuti langkah-langkah mudah berikut:
 
-## 🚀 Quickstart & Database Setup (For Cloners)
-
-Jika Anda menyalin / meng-clone repositori ini dari GitHub:
-
-### 1. Clone & Install Dependencies
+### 1. Clone Repositori & Install Dependensi
 ```bash
 git clone https://github.com/rayhanbilal09-dev/NewsScraper.git
 cd NewsScraper
 composer install
+```
+
+### 2. Salin Konfigurasi Environment
+```bash
 cp .env.example .env
 php artisan key:generate
 ```
 
-### 2. Setup Database (Pilih salah satu cara berikut)
+### 3. Setup Database (Pilih salah satu cara)
 
-- **Cara A (SQLite - Langsung Pakai Tanpa Setup):**
-  File database `database/database.sqlite` **sudah disertakan langsung di dalam repositori** beserta data topik & log scraping awal. Anda tidak perlu setup apa pun, langsung jalankan `php artisan serve`!
-
-- **Cara B (MySQL / MariaDB / phpMyAdmin via SQL Dump):**
-  Tersedia file SQL dump [`database.sql`](database.sql) di root folder (dan di `database/database.sql`).
-  Tinggal impor file `database.sql` langsung melalui **phpMyAdmin** (Database `newsscraper` akan otomatis dibuat), atau lewat terminal:
+- **Cara A (Migrasi & Seed Otomatis - Rekomendasi):**
+  Sesuaikan konfigurasi database Anda di file `.env`, lalu jalankan:
   ```bash
-  mysql -u root -p < database.sql
+  php artisan migrate --seed
+  ```
+  Atau untuk reset dan fresh seeding:
+  ```bash
+  php artisan migrate:fresh --seed
+  ```
+
+- **Cara B (SQLite - Langsung Pakai Tanpa Setup MySQL):**
+  File database `database/database.sqlite` sudah disertakan di repositori:
+  ```ini
+  DB_CONNECTION=sqlite
+  ```
+  Langsung jalankan `php artisan serve`!
+
+- **Cara C (MySQL / MariaDB via SQL Dump):**
+  Tersedia file SQL dump [`database/newsscraper.sql`](database/newsscraper.sql). Anda dapat mengimpornya via phpMyAdmin atau terminal:
+  ```bash
+  mysql -u root -p newsscraper < database/newsscraper.sql
   ```
   Lalu sesuaikan `.env`:
   ```ini
@@ -123,48 +121,36 @@ php artisan key:generate
   DB_PASSWORD=
   ```
 
-- **Cara C (Fresh Migrate & Seed Otomatis):**
-  ```bash
-  php artisan migrate:fresh --seed
-  ```
-
 ---
 
-## 🛠 Menjalankan Aplikasi
+## 💻 Menjalankan Aplikasi
 
-### 1. Eksekusi Scraper Manual via Console
+### 1. Jalankan Local Web Server
+```bash
+php artisan serve
+```
+Akses halaman dashboard di browser:
+- **Trending Topics**: [http://127.0.0.1:8000/trending-topics](http://127.0.0.1:8000/trending-topics)
+- **Scraping Monitor**: [http://127.0.0.1:8000/scraping-logs](http://127.0.0.1:8000/scraping-logs)
+
+### 2. Menjalankan Scraper Secara Manual
+Untuk melakukan crawling berita aktual, stemming bahasa Indonesia, dan perangkingan topik:
 ```bash
 php artisan app:run-news-scraper
 ```
+Atau klik tombol **"Run Scraper"** / **"Run Pipeline"** langsung dari antarmuka Web UI.
 
-### 2. Schedule Execution
-The scraper is scheduled in `routes/console.php`:
-```php
-Schedule::command('app:run-news-scraper')
-    ->hourly()
-    ->withoutOverlapping()
-    ->runInBackground();
-```
-To run the Laravel schedule worker:
+### 3. Menjalankan Task Scheduler
+Scraper telah didaftarkan pada scheduler Laravel (`routes/console.php`) agar berjalan setiap jam:
 ```bash
 php artisan schedule:work
 ```
 
-### 3. Run Development Server
-```bash
-php artisan serve --port=8000
-```
-- **Trending Topics Page**: [http://127.0.0.1:8000/trending-topics](http://127.0.0.1:8000/trending-topics)
-- **Web Scraper Monitor**: [http://127.0.0.1:8000/scraping-logs](http://127.0.0.1:8000/scraping-logs)
+---
 
-### 4. API Endpoints
-- `GET /api/trending-topics`: Returns top 5 trending topics and `last_updated_at`.
-- `GET /api/scraping-logs`: Returns recent logs with `succeeded_jobs_count`, `failed_jobs_count`, `active_scrapers_count`, and `proxy_health`.
-- `GET /api/scraping-logs/{id}`: Detailed inspection of a specific log entry.
-- `POST /api/run-scraper`: Programmatically trigger a scrape.
-
-### 5. Running Automated Tests
+## 🧪 Menjalankan Automated Tests
+Semua endpoint, render UI, pipeline NLP Sastrawi & TextRank, serta Artisan Command telah diverifikasi dengan PHPUnit test:
 ```bash
 php artisan test
 ```
-All 8 Feature and Unit tests pass (36 assertions).
+Hasil: `8 passed (36 assertions)`.

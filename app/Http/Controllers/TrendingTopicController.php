@@ -11,6 +11,7 @@ class TrendingTopicController extends Controller
 {
     /**
      * Display trending topics page or return JSON payload.
+     * GET /trending-topics
      */
     public function index(Request $request): View|JsonResponse
     {
@@ -23,17 +24,9 @@ class TrendingTopicController extends Controller
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
                 'status' => 'success',
-                'last_updated_at' => $lastUpdatedAt,
-                'data' => $topics->map(function ($topic, $index) {
-                    return [
-                        'rank' => $index + 1,
-                        'id' => $topic->id,
-                        'topic_name' => $topic->topic_name,
-                        'category' => $topic->category,
-                        'score_or_count' => $topic->score_or_count,
-                        'last_successful_update' => $topic->last_successful_update?->toIso8601String(),
-                    ];
-                }),
+                'last_updated_at' => $lastUpdatedAt ? \Carbon\Carbon::parse($lastUpdatedAt)->toIso8601String() : null,
+                'data' => $topics,
+                'trending_topics' => $topics,
             ]);
         }
 
@@ -44,7 +37,8 @@ class TrendingTopicController extends Controller
     }
 
     /**
-     * Dedicated API endpoint for trending topics.
+     * Dedicated API endpoint returning top 5 trending topics and last_updated_at.
+     * GET /api/trending-topics
      */
     public function apiIndex(): JsonResponse
     {
@@ -58,6 +52,7 @@ class TrendingTopicController extends Controller
             'status' => 'success',
             'last_updated_at' => $lastUpdatedAt ? \Carbon\Carbon::parse($lastUpdatedAt)->toIso8601String() : null,
             'data' => $topics,
+            'trending_topics' => $topics,
         ]);
     }
 }

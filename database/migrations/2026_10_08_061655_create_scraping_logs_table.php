@@ -19,8 +19,6 @@ return new class extends Migration
             $table->timestamp('start_time')->nullable();
             $table->timestamp('end_time')->nullable();
             $table->text('error_message')->nullable();
-            $table->decimal('duration_seconds', 8, 2)->default(0);
-            $table->unsignedInteger('records_count')->default(0);
             $table->timestamps();
         });
     }
